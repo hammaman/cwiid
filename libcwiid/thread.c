@@ -216,6 +216,23 @@ void *status_thread(struct wiimote *wiimote)
 					case EXT_BALANCE:
 						status_mesg->ext_type = CWIID_EXT_BALANCE;
 						break;
+					/* AH added new code here
+					new variables:
+					EXT_GUITAR_HERO = 0x0103
+					EXT2_GH_GUITAR = 0x00 (0x..00 00 A4 20 01 03)
+					EXT2_GH_DRUMS  = 0x01 (0x..01 00 A4 20 01 03)
+					CWIID_EXT_GHGUITAR needs to be defined
+					CWIID_EXT_GHDRUMS also needs to be defined
+					*/
+					case EXT_GUITAR_HERO:
+						switch (buf[5]) {
+						case EXT2_GH_GUITAR:
+							status_mesg->ext_type = CWIID_EXT_GHGUITAR;
+							break;
+						case EXT2_GH_DRUMS:
+							status_mesg->ext_type = CWIID_EXT_GHDRUMS;
+							break;
+						}
 					default:
 						status_mesg->ext_type = CWIID_EXT_UNKNOWN;
 						break;
