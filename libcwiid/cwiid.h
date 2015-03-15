@@ -30,18 +30,24 @@
 #define CWIID_FLAG_REPEAT_BTN	0x04
 #define CWIID_FLAG_NONBLOCK		0x08
 #define CWIID_FLAG_MOTIONPLUS	0x10
+#define CWIID_FLAG_GHGUITAR     0x20
+#define CWIID_FLAG_GHDRUMS      0x40
 
+/* AH added two new report mode flags */
 /* Report Mode Flags */
-#define CWIID_RPT_STATUS		0x01
-#define CWIID_RPT_BTN			0x02
-#define CWIID_RPT_ACC			0x04
-#define CWIID_RPT_IR			0x08
-#define CWIID_RPT_NUNCHUK		0x10
-#define CWIID_RPT_CLASSIC		0x20
-#define CWIID_RPT_BALANCE		0x40
-#define CWIID_RPT_MOTIONPLUS	0x80
+#define CWIID_RPT_STATUS		0x0001
+#define CWIID_RPT_BTN			0x0002
+#define CWIID_RPT_ACC			0x0004
+#define CWIID_RPT_IR			0x0008
+#define CWIID_RPT_NUNCHUK		0x0010
+#define CWIID_RPT_CLASSIC		0x0020
+#define CWIID_RPT_BALANCE		0x0040
+#define CWIID_RPT_MOTIONPLUS	0x0080
+#define CWIID_RPT_GH_GUITAR     0x0100
+#define CWIID_RPT_GH_DRUMS      0x0200
 #define CWIID_RPT_EXT		(CWIID_RPT_NUNCHUK | CWIID_RPT_CLASSIC | \
-                             CWIID_RPT_BALANCE | CWIID_RPT_MOTIONPLUS)
+                             CWIID_RPT_BALANCE | CWIID_RPT_MOTIONPLUS | \
+                             CWIID_RPT_GH_GUITAR | CWIID_RPT_GH_DRUMS)
 
 /* LED flags */
 #define CWIID_LED1_ON	0x01
@@ -130,6 +136,7 @@ enum cwiid_command {
 	CWIID_CMD_RPT_MODE
 };
 
+/* AH added two new message types */
 enum cwiid_mesg_type {
 	CWIID_MESG_STATUS,
 	CWIID_MESG_BTN,
@@ -139,16 +146,21 @@ enum cwiid_mesg_type {
 	CWIID_MESG_CLASSIC,
 	CWIID_MESG_BALANCE,
 	CWIID_MESG_MOTIONPLUS,
+    CWIID_MESG_GH_GUITAR,
+    CWIID_MESG_GH_DRUMS,
 	CWIID_MESG_ERROR,
 	CWIID_MESG_UNKNOWN
 };
 
+/* AH added two new extension types */
 enum cwiid_ext_type {
 	CWIID_EXT_NONE,
 	CWIID_EXT_NUNCHUK,
 	CWIID_EXT_CLASSIC,
 	CWIID_EXT_BALANCE,
 	CWIID_EXT_MOTIONPLUS,
+    CWIID_EXT_GH_GUITAR,
+    CWIID_EXT_GH_DRUMS,
 	CWIID_EXT_UNKNOWN
 };
 
@@ -228,6 +240,20 @@ struct cwiid_motionplus_mesg {
 	uint8_t low_speed[3];
 };
 
+struct cwiid_ghguitar_mesg {
+	enum cwiid_mesg_type type;
+	uint8_t ghbuttons;
+	uint8_t strum;
+    uint8_t whammy;
+};
+
+struct cwiid_ghdrums_mesg {
+	enum cwiid_mesg_type type;
+	uint8_t ghbuttons;
+	uint8_t b_softness;
+    uint8_t b_button;
+};
+
 struct cwiid_error_mesg {
 	enum cwiid_mesg_type type;
 	enum cwiid_error error;
@@ -243,6 +269,8 @@ union cwiid_mesg {
 	struct cwiid_classic_mesg classic_mesg;
 	struct cwiid_balance_mesg balance_mesg;
 	struct cwiid_motionplus_mesg motionplus_mesg;
+    struct cwiid_ghguitar_mesg ghguitar_mesg;
+    struct cwiid_ghdrums_mesg ghdrums_mesg;
 	struct cwiid_error_mesg error_mesg;
 };
 
@@ -273,11 +301,25 @@ struct motionplus_state {
 	uint8_t low_speed[3];
 };
 
+struct ghguitar_state {
+	uint8_t ghbuttons;
+	uint8_t strum;
+    uint8_t whammy;
+};
+
+struct ghdrums_state {
+	uint8_t ghbuttons;
+	uint8_t b_softness;
+    uint8_t b_button;
+};
+
 union ext_state {
 	struct nunchuk_state nunchuk;
 	struct classic_state classic;
 	struct balance_state balance;
 	struct motionplus_state motionplus;
+    struct ghguitar_state ghguitar;
+    struct ghdrums_state ghdrums;
 };
 
 struct cwiid_state {

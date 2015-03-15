@@ -178,6 +178,8 @@ int process_ext(struct wiimote *wiimote, unsigned char *data,
 	struct cwiid_classic_mesg *classic_mesg;
 	struct cwiid_balance_mesg *balance_mesg;
 	struct cwiid_motionplus_mesg *motionplus_mesg;
+    struct cwiid_ghguitar_mesg *ghguitar_mesg;
+    struct cwiid_ghdrums_mesg *ghdrums_mesg;
 	int i;
 
 	switch (wiimote->state.ext_type) {
@@ -249,7 +251,28 @@ int process_ext(struct wiimote *wiimote, unsigned char *data,
 			motionplus_mesg->low_speed[CWIID_PSI]    = ((uint8_t)data[3] & 0x02)>>1;
 		}
 		break;
-	}
+    /* AH added functionality for GH Guitar */
+   	case CWIID_EXT_GH_GUITAR:
+		if (wiimote->state.rpt_mode & CWIID_RPT_GH_GUITAR) {
+			ghguitar_mesg = &ma->array[ma->count++].ghguitar_mesg;
+			ghguitar_mesg->type = CWIID_MESG_GH_GUITAR;
+			ghguitar_mesg->ghbuttons               = ((uint8_t)data[5] & 0xF8)>>3;      // ORBGY... -> ..ORBGY.
+			ghguitar_mesg->strum                   = ((uint8_t)data[4] & 0x40)>>5 |     // .D...... & .......U -> ......DU
+			                                           ((uint8_t)data[5] & 0x01);
+			ghguitar_mesg->whammy                  = ((uint8_t)data[3] & 0x1F);         // ...WWWWW -> ...WWWWW
+		}
+		break;
+    /* AH added functionality for GH Drums */
+   	case CWIID_EXT_GH_DRUMS:
+		if (wiimote->state.rpt_mode & CWIID_RPT_GH_DRUMS) {
+			ghdrums_mesg = &ma->array[ma->count++].ghdrums_mesg;
+			ghdrums_mesg->type = CWIID_MESG_GH_DRUMS;
+			ghdrums_mesg->ghbuttons               = ((uint8_t)data[5] & 0xFC)>>2;      // ORBGYP.. -> ..ORBGYP
+			ghdrums_mesg->b_softness              = ((uint8_t)data[3] & 0xE0)>>5;      // SSS..... -> .....SSS
+			ghdrums_mesg->b_button                = ((uint8_t)data[2] & 0x3E)>>1;      // ..BBBBB. -> ...BBBBB
+		}
+		break;
+    }
 
 	return 0;
 }

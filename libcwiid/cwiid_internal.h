@@ -96,6 +96,12 @@
 #define EXT_CLASSIC		0x0101
 #define EXT_BALANCE		0x0402
 #define EXT_MOTIONPLUS	0x0405
+/* AH added Guitar Hero extensions */
+#define EXT_GUITAR_HERO 0x0103
+
+/* Need extra extension values */
+#define EXT2_GH_GUITAR     0x00
+#define EXT2_GH_DRUMS      0x01
 
 /* IR Enable blocks */
 #define MARCAN_IR_BLOCK_1			"\x00\x00\x00\x00\x00\x00\x90\x00\xC0"

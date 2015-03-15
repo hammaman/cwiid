@@ -86,7 +86,18 @@ int update_state(struct wiimote *wiimote, struct mesg_array *ma)
 			       mesg->motionplus_mesg.low_speed,
 			       sizeof wiimote->state.ext.motionplus.low_speed);
 			break;
-		case CWIID_MESG_ERROR:
+        // AH added GHGUITAR and GHDRUMS
+        case CWIID_MESG_GHGUITAR:
+			wiimote->state.ext.ghguitar.ghbuttons = mesg->ghguitar_mesg.ghbuttons
+            wiimote->state.ext.ghguitar.strum = mesg->ghguitar_mesg.strum
+            wiimote->state.ext.ghguitar.whammy = mesg->ghguitar_mesg.whammy
+			break;
+		case CWIID_MESG_GHDRUMS:
+			wiimote->state.ext.ghdrums.ghbuttons = mesg->ghdrums_mesg.ghbuttons
+            wiimote->state.ext.ghdrums.b_softness = mesg->ghdrums_mesg.b_softness
+            wiimote->state.ext.ghdrums.b_buttons = mesg->ghdrums_mesg.b_buttons
+            break;
+        case CWIID_MESG_ERROR:
 			wiimote->state.error = mesg->error_mesg.error;
 			break;
 		case CWIID_MESG_UNKNOWN:
@@ -154,10 +165,13 @@ int update_rpt_mode(struct wiimote *wiimote, int8_t rpt_mode)
 	}
 
 	/* Pick a report mode based on report flags */
+    // AH added GH instruments
 	if ((rpt_mode & CWIID_RPT_EXT) &&
 	  ((wiimote->state.ext_type == CWIID_EXT_NUNCHUK) ||
 	   (wiimote->state.ext_type == CWIID_EXT_CLASSIC) ||
-	   (wiimote->state.ext_type == CWIID_EXT_MOTIONPLUS))) {
+	   (wiimote->state.ext_type == CWIID_EXT_MOTIONPLUS) ||
+       (wiimote->state.ext_type == CWIID_EXT_GHGUITAR) ||
+       (wiimote->state.ext_type == CWIID_EXT_GHDRUMS))) {
 		if ((rpt_mode & CWIID_RPT_IR) && (rpt_mode & CWIID_RPT_ACC)) {
 			rpt_type = RPT_BTN_ACC_IR10_EXT6;
 			ir_enable_seq = ir_enable10_seq;
@@ -247,7 +261,16 @@ int update_rpt_mode(struct wiimote *wiimote, int8_t rpt_mode)
 	  (CWIID_RPT_MOTIONPLUS & ~rpt_mode & wiimote->state.rpt_mode)) {
 		memset(&wiimote->state.ext, 0, sizeof wiimote->state.ext);
 	}
-
+    // AH added
+	else if ((wiimote->state.ext_type == CWIID_EXT_GHGUITAR) &&
+	  (CWIID_RPT_GHGUITAR & ~rpt_mode & wiimote->state.rpt_mode)) {
+		memset(&wiimote->state.ext, 0, sizeof wiimote->state.ext);
+	}
+	else if ((wiimote->state.ext_type == CWIID_EXT_GHDRUMS) &&
+	  (CWIID_RPT_GHDRUMS & ~rpt_mode & wiimote->state.rpt_mode)) {
+		memset(&wiimote->state.ext, 0, sizeof wiimote->state.ext);
+	}
+    //End of AH added
 	wiimote->state.rpt_mode = rpt_mode;
 
 	if (pthread_mutex_unlock(&wiimote->rpt_mutex)) {
