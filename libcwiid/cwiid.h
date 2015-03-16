@@ -323,7 +323,8 @@ union ext_state {
 };
 
 struct cwiid_state {
-	uint8_t rpt_mode;
+    /* AH think this needs to be a uint16_t variable for rpt_mode */
+	uint16_t rpt_mode;
 	uint8_t led;
 	uint8_t rumble;
 	uint8_t battery;
@@ -393,7 +394,8 @@ int cwiid_send_rpt(cwiid_wiimote_t *wiimote, uint8_t flags, uint8_t report,
 int cwiid_request_status(cwiid_wiimote_t *wiimote);
 int cwiid_set_led(cwiid_wiimote_t *wiimote, uint8_t led);
 int cwiid_set_rumble(cwiid_wiimote_t *wiimote, uint8_t rumble);
-int cwiid_set_rpt_mode(cwiid_wiimote_t *wiimote, uint8_t rpt_mode);
+/* AH - need to increase the size of report mode to uint16_t from uint8_t */
+int cwiid_set_rpt_mode(cwiid_wiimote_t *wiimote, uint16_t rpt_mode);
 int cwiid_read(cwiid_wiimote_t *wiimote, uint8_t flags, uint32_t offset,
                uint16_t len, void *data);
 int cwiid_write(cwiid_wiimote_t *wiimote, uint8_t flags, uint32_t offset,

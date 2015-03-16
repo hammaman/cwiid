@@ -383,8 +383,8 @@ static PyObject *Wiimote_get_state(Wiimote* self, void *closure)
 		PyErr_SetString(PyExc_IOError, "get state error");
 		return NULL;
 	}
-
-	PyState = Py_BuildValue("{s:B,s:B,s:B,s:B,s:i,s:i}",
+    /* AH question - this need to be changed to reflect rpt_mode is now 2 bytes (so B becomes H) */
+	PyState = Py_BuildValue("{s:H,s:B,s:B,s:B,s:i,s:i}",
 	                        "rpt_mode", state.rpt_mode,
 	                        "led", state.led,
 	                        "rumble", state.rumble,
@@ -586,7 +586,61 @@ static PyObject *Wiimote_get_state(Wiimote* self, void *closure)
 			Py_DECREF(PyExt);
 		}
 		break;
-	default:
+    /* AH added for GH_GUITAR */
+	case CWIID_EXT_GH_GUITAR:
+		if (state.rpt_mode & CWIID_RPT_GH_GUITAR) {
+            /* AH data format: string, byte (ghbuttons), string, byte (strum), string, byte (whammy) */
+			PyExt = Py_BuildValue("{s:B,s:B,s:B}",
+		                          "GH Buttons",
+                                  state.ext.gh_guitar.ghbuttons,
+                                  "GH Strum",
+                                  state.ext.gh_guitar.strum,
+                                  "GH Whammy",
+                                  state.ext.gh_guitar.whammy);
+
+			if (!PyExt) {
+				Py_DECREF(PyState);
+				return NULL;
+			}
+
+			if (PyDict_SetItemString(PyState, "gh_guitar", PyExt)) {
+				Py_DECREF(PyState);
+				Py_DECREF(PyExt);
+				return NULL;
+			}
+
+			Py_DECREF(PyExt);
+		}
+		break;
+
+	case CWIID_EXT_GH_DRUMS:
+		if (state.rpt_mode & CWIID_RPT_GH_DRUMS) {
+            /* AH data format: string, byte (ghbuttons), string, byte (b_softness), string, byte (b_button) */
+			PyExt = Py_BuildValue("{s:B,s:B,s:B}",
+		                          "GH Buttons",
+                                  state.ext.gh_drums.gh_buttons,
+                                  "GH Button Softness",
+                                  state.ext.gh_drums.b_softness,
+                                  "GH Button Reference",
+                                  state.ext.gh_drums.b_button);
+
+			if (!PyExt) {
+				Py_DECREF(PyState);
+				return NULL;
+			}
+
+			if (PyDict_SetItemString(PyState, "gh_drums", PyExt)) {
+				Py_DECREF(PyState);
+				Py_DECREF(PyExt);
+				return NULL;
+			}
+
+			Py_DECREF(PyExt);
+		}
+		break;
+    /* End of AH added code */
+        
+     default:
 		break;
 	}
 
@@ -732,7 +786,8 @@ static int
 		return -1;
 	}
 
-	if (cwiid_set_rpt_mode(self->wiimote, (uint8_t)rpt_mode)) {
+    /* Need to change size of report mode to uint16_t from uint8_t */
+	if (cwiid_set_rpt_mode(self->wiimote, (uint16_t)rpt_mode)) {
 		PyErr_SetString(PyExc_AttributeError,
 		                "Error setting wiimote report mode");
 		return -1;
@@ -890,6 +945,12 @@ static void CallbackBridge(cwiid_wiimote_t *wiimote, int mesg_count,
  *                               "left_bottom":left_bottom},
  *          (cwiid.MOTIONPLUS_MESG,{"angle_rate":(psi,theta,phi),
  *                                  "low_speed":(psi,theta,phi)},
+ *          (cwiid.GH_GUITAR_MESG,{"GH Buttons":gh_buttons,
+ *                                 "GH Strum":strum,
+ *                                 "GH Whammy":whammy}
+ *          (cwiid.GH_DRUMS_MESG,{"GH Buttons":gh_buttons,
+ *                                 "GH Button Softness":b_softness,
+ *                                 "GH Button Reference":b_button}
  *          (cwiid.ERROR_MESG,error)]
  */
 PyObject *ConvertMesgArray(int mesg_count, union cwiid_mesg mesg[])
@@ -1016,10 +1077,27 @@ PyObject *ConvertMesgArray(int mesg_count, union cwiid_mesg mesg[])
                                     "low_speed",
                                     mesg[i].motionplus_mesg.low_speed[CWIID_PHI],
                                     mesg[i].motionplus_mesg.low_speed[CWIID_THETA],
-                                    mesg[i].motionplus_mesg.low_speed[CWIID_PSI]);
-                                    
+                                    mesg[i].motionplus_mesg.low_speed[CWIID_PSI]);                                    
 			break;
-		case CWIID_MESG_ERROR:
+		case CWIID_MESG_GH_GUITAR:
+			mesgVal = Py_BuildValue("{s:B,s:B,s:B}",
+			                        "GH Buttons",
+                                    mesg[i].gh_guitar_mesg.gh_buttons,
+			                        "GH Strum",
+                                    mesg[i].gh_guitar_mesg.strum,
+			                        "GH Whammy",
+                                    mesg[i].gh_guitar_mesg.whammy);
+			break;
+		case CWIID_MESG_GH_DRUMS:
+			mesgVal = Py_BuildValue("{s:B,s:B,s:B}",
+			                        "GH Buttons",
+                                    mesg[i].gh_drums_mesg.gh_buttons,
+			                        "GH Button Softness",
+                                    mesg[i].gh_drums_mesg.b_softness,
+			                        "GH Button Reference",
+                                    mesg[i].gh_drums_mesg.b_button);
+			break;
+        case CWIID_MESG_ERROR:
 			mesgVal = Py_BuildValue("i", mesg[i].error_mesg.error);
 			break;
 		default:
