@@ -1,3 +1,5 @@
+/* THIS NEEDS FURTHER WORK TO SORT OUT THE REPORTING STATE TO UINT16_T
+
 /* Copyright (C) 2007 L. Donnie Smith <donnie.smith@gatech.edu>
  *
  *  This program is free software; you can redistribute it and/or modify
